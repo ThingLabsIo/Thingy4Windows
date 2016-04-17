@@ -54,11 +54,11 @@ namespace ConnectedThingy
         private ThreadPoolTimer messageTimer;
 
         // Use the device specific connection string here
-        private const string IOT_HUB_CONN_STRING = "HostName=iot-labs.azure-devices.net;DeviceId=ThingLabs00;SharedAccessKey=Zcpwj/z/ezloiepWV6I32Px3D1HxKSSP5x/ayL6NUb0="; //"YOUR DEVICE SPECIFIC CONNECTION STRING GOES HERE";
+        private const string IOT_HUB_CONN_STRING = "YOUR DEVICE SPECIFIC CONNECTION STRING GOES HERE";
         // Use the name of your Azure IoT device here - this should be the same as the name in the connections string
-        private const string IOT_HUB_DEVICE = "ThingLabs00"; //"YOUR DEVICE NAME GOES HERE";
+        private const string IOT_HUB_DEVICE = "YOUR DEVICE NAME GOES HERE";
         // Provide a short description of the location of the device, such as 'Home Office' or 'Garage'
-        private const string IOT_HUB_DEVICE_LOCATION = "The House of Mouse"; //"YOUR DEVICE LOCATION GOES HERE";
+        private const string IOT_HUB_DEVICE_LOCATION = "YOUR DEVICE LOCATION GOES HERE";
 
         public void Run(IBackgroundTaskInstance taskInstance)
         {

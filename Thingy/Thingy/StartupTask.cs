@@ -12,6 +12,8 @@ namespace Thingy
     public sealed class StartupTask : IBackgroundTask
     {
         /**** DIGITAL SENSORS AND ACTUATORS ****/
+        // Connect the button sensor to digital port 2
+        IBuzzer buzzer;
         // Connect the button sensor to digital port 4
         IButtonSensor button;
         // Connect the Blue LED to digital port 5
@@ -48,6 +50,7 @@ namespace Thingy
             deferral = taskInstance.GetDeferral();
 
             // Instantiate the sensors and actuators
+            buzzer = DeviceFactory.Build.Buzzer(Pin.DigitalPin2);
             button = DeviceFactory.Build.ButtonSensor(Pin.DigitalPin4);
             blueLed = DeviceFactory.Build.Led(Pin.DigitalPin5);
             redLed = DeviceFactory.Build.Led(Pin.DigitalPin6);
@@ -84,6 +87,7 @@ namespace Thingy
                     buttonState = button.CurrentState;
                     // Change the state of the blue LED
                     blueLed.ChangeState(buttonState);
+                    buzzer.ChangeState(buttonState);
                 }
 
                 // Capture the current value from the Light Sensor

@@ -26,8 +26,6 @@ namespace ConnectedThingy
         ILed redLed;
 
         /**** ANALOG SENSORS ****/
-        // Connect the sound sensor to analog port 0
-        ISoundSensor soundSensor;
         // Connect the light sensor to analog port 2
         ILightSensor lightSensor;
 
@@ -43,8 +41,6 @@ namespace ConnectedThingy
         private int brightness;
         // Create a variable to track the current value from the Light Sensor
         private int actualAmbientLight;
-        // Create a variable to track the current ambient noise level
-        private int soundLevel;
         // Create a variable to track the state of the button
         private SensorStatus buttonState;
         // Create a timer to control the rateof sensor and actuator interactions
@@ -73,12 +69,11 @@ namespace ConnectedThingy
             deviceClient = DeviceClient.CreateFromConnectionString(IOT_HUB_CONN_STRING);
 
             // Instantiate the sensors and actuators
-            //buzzer = DeviceFactory.Build.Buzzer(Pin.DigitalPin2);
+            buzzer = DeviceFactory.Build.Buzzer(Pin.DigitalPin2);
             button = DeviceFactory.Build.ButtonSensor(Pin.DigitalPin4);
             blueLed = DeviceFactory.Build.Led(Pin.DigitalPin5);
             redLed = DeviceFactory.Build.Led(Pin.DigitalPin6);
 
-            soundSensor = DeviceFactory.Build.SoundSensor(Pin.AnalogPin0);
             lightSensor = DeviceFactory.Build.LightSensor(Pin.AnalogPin2);
 
             display = DeviceFactory.Build.RgbLcdDisplay();
@@ -135,13 +130,6 @@ namespace ConnectedThingy
             }
         }
 
-        // To avoid sending messages every 200ms when there is a loud sound, 
-        // create a boolean variable to remember if the current message has been sent
-        Boolean soundLevelMessageSent = false;
-        // To avoid sending messages every 200ms when the button is held down, 
-        // create a boolean variable to remember if the current message has been sent
-        Boolean buttonMessageSent = false;
-
         private void Timer_Tick(ThreadPoolTimer timer)
         {
             try
@@ -153,7 +141,8 @@ namespace ConnectedThingy
                     buttonState = button.CurrentState;
                     // Change the state of the blue LED
                     blueLed.ChangeState(buttonState);
-                    
+                    buzzer.ChangeState(buttonState);
+
                     // Send a message to Azure indicating the state change
                     SendMessageToIoTHubAsync("led", (int)blueLed.CurrentState);
                 }

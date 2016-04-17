@@ -7,11 +7,17 @@ using GrovePi.Sensors;
 using GrovePi.I2CDevices;
 using Windows.System.Threading;
 
-namespace Thingy
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Azure.Devices.Client;
+
+namespace ConnectedThingy
 {
     public sealed class StartupTask : IBackgroundTask
     {
         /**** DIGITAL SENSORS AND ACTUATORS ****/
+        // Connect the buzzer to digital port 2
+        IBuzzer buzzer;
         // Connect the button sensor to digital port 4
         IButtonSensor button;
         // Connect the Blue LED to digital port 5
@@ -20,6 +26,8 @@ namespace Thingy
         ILed redLed;
 
         /**** ANALOG SENSORS ****/
+        // Connect the sound sensor to analog port 0
+        ISoundSensor soundSensor;
         // Connect the light sensor to analog port 2
         ILightSensor lightSensor;
 
@@ -35,6 +43,8 @@ namespace Thingy
         private int brightness;
         // Create a variable to track the current value from the Light Sensor
         private int actualAmbientLight;
+        // Create a variable to track the current ambient noise level
+        private int soundLevel;
         // Create a variable to track the state of the button
         private SensorStatus buttonState;
         // Create a timer to control the rateof sensor and actuator interactions
@@ -42,16 +52,35 @@ namespace Thingy
         // Create a deferral object to prevent the app from terminating
         private BackgroundTaskDeferral deferral;
 
+        // Define the Azure IoT SDK DeviceClient instance
+        private DeviceClient deviceClient;
+        // Create a timer to control the rate of sending messages to Azure.
+        private ThreadPoolTimer messageTimer;
+
+        // Use the device specific connection string here
+        private const string IOT_HUB_CONN_STRING = "HostName=iot-labs.azure-devices.net;DeviceId=ThingLabs00;SharedAccessKey=Zcpwj/z/ezloiepWV6I32Px3D1HxKSSP5x/ayL6NUb0="; //"YOUR DEVICE SPECIFIC CONNECTION STRING GOES HERE";
+        // Use the name of your Azure IoT device here - this should be the same as the name in the connections string
+        private const string IOT_HUB_DEVICE = "ThingLabs00"; //"YOUR DEVICE NAME GOES HERE";
+        // Provide a short description of the location of the device, such as 'Home Office' or 'Garage'
+        private const string IOT_HUB_DEVICE_LOCATION = "The House of Mouse"; //"YOUR DEVICE LOCATION GOES HERE";
+
         public void Run(IBackgroundTaskInstance taskInstance)
         {
             // Get the deferral instance
             deferral = taskInstance.GetDeferral();
 
+            // Instantiate the Azure device client
+            deviceClient = DeviceClient.CreateFromConnectionString(IOT_HUB_CONN_STRING);
+
             // Instantiate the sensors and actuators
+            //buzzer = DeviceFactory.Build.Buzzer(Pin.DigitalPin2);
             button = DeviceFactory.Build.ButtonSensor(Pin.DigitalPin4);
             blueLed = DeviceFactory.Build.Led(Pin.DigitalPin5);
             redLed = DeviceFactory.Build.Led(Pin.DigitalPin6);
+
+            soundSensor = DeviceFactory.Build.SoundSensor(Pin.AnalogPin0);
             lightSensor = DeviceFactory.Build.LightSensor(Pin.AnalogPin2);
+
             display = DeviceFactory.Build.RgbLcdDisplay();
 
             buttonState = SensorStatus.Off;
@@ -71,7 +100,47 @@ namespace Thingy
 
             // Start a timer to check the sensors and activate the actuators five times per second
             timer = ThreadPoolTimer.CreatePeriodicTimer(Timer_Tick, TimeSpan.FromMilliseconds(200));
+            
+            // Send messages to Azure IoT Hub every one-second
+            // Start a timer to send messages to Azure once per second
+            messageTimer = ThreadPoolTimer.CreatePeriodicTimer(MessageTimer_Tick, TimeSpan.FromSeconds(1));
         }
+
+        private void MessageTimer_Tick(ThreadPoolTimer timer)
+        {
+            SendMessageToIoTHubAsync("ambientLight", actualAmbientLight);
+        }
+
+        private async Task SendMessageToIoTHubAsync(string sensorType, int sensorState)
+        {
+            try
+            {
+                var payload = "{" +
+                    "\"deviceId\":\"" + IOT_HUB_DEVICE + "\", " +
+                    "\"location\":\"" + IOT_HUB_DEVICE_LOCATION + "\", " +
+                    "\"sensorType\":\"" + sensorType + "\", " +
+                    "\"sensorState\":" + sensorState + ", " +
+                    "\"localTimestamp\":\"" + DateTime.Now.ToLocalTime() + "\"" +
+                    "}";
+
+                var msg = new Message(Encoding.UTF8.GetBytes(payload));
+
+                System.Diagnostics.Debug.WriteLine("\t{0}> Sending message: [{1}]", DateTime.Now.ToLocalTime(), payload);
+
+                await deviceClient.SendEventAsync(msg);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("!!!! " + ex.Message);
+            }
+        }
+
+        // To avoid sending messages every 200ms when there is a loud sound, 
+        // create a boolean variable to remember if the current message has been sent
+        Boolean soundLevelMessageSent = false;
+        // To avoid sending messages every 200ms when the button is held down, 
+        // create a boolean variable to remember if the current message has been sent
+        Boolean buttonMessageSent = false;
 
         private void Timer_Tick(ThreadPoolTimer timer)
         {
@@ -84,12 +153,14 @@ namespace Thingy
                     buttonState = button.CurrentState;
                     // Change the state of the blue LED
                     blueLed.ChangeState(buttonState);
+                    
+                    // Send a message to Azure indicating the state change
+                    SendMessageToIoTHubAsync("led", (int)blueLed.CurrentState);
                 }
 
                 // Capture the current value from the Light Sensor
                 actualAmbientLight = lightSensor.SensorValue();
 
-                // Log the amount of resistance the light sensor is providing.
                 System.Diagnostics.Debug.WriteLine("R: " + lightSensor.Resistance());
 
                 // If the actual light measurement is lower than the defined threshold

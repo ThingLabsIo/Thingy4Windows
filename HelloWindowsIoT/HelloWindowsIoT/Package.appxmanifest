@@ -8,14 +8,14 @@
   IgnorableNamespaces="uap mp iot">
 
   <Identity
-    Name="HellowWindowsIoT-uwp"
+    Name="HelloWindowsIoT-uwp"
     Publisher="CN=dseven"
     Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="f74ee9cc-0201-4241-94df-fde11689d2ca" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="34283209-a6c4-41aa-9ff3-2ac78c38a554" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>HellowWindowsIoT</DisplayName>
+    <DisplayName>HelloWindowsIoT</DisplayName>
     <PublisherDisplayName>dseven</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -31,17 +31,17 @@
   <Applications>
     <Application Id="App">
       <uap:VisualElements
-        DisplayName="HellowWindowsIoT"
+        DisplayName="HelloWindowsIoT"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
-        Description="HellowWindowsIoT"
+        Description="HelloWindowsIoT"
         BackgroundColor="transparent"
         AppListEntry="none">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
       <Extensions>
-        <Extension Category="windows.backgroundTasks" EntryPoint="HellowWindowsIoT.StartupTask">
+        <Extension Category="windows.backgroundTasks" EntryPoint="HelloWindowsIoT.StartupTask">
           <BackgroundTasks>
             <iot:Task Type="startup" />
           </BackgroundTasks>

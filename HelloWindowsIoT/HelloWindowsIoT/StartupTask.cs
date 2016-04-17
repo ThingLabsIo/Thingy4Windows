@@ -1,4 +1,4 @@
-// Blink an LED once per second
+﻿// Blink an LED once per second
 
 // GrovePi + Light Sensor + LED
 // http://www.seeedstudio.com/wiki/Grove_-_LED_Socket_Kit
@@ -29,10 +29,6 @@ THE SOFTWARE.
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net.Http;
 using Windows.ApplicationModel.Background;
 
 // Add using statements to the GrovePi libraries
@@ -40,7 +36,7 @@ using GrovePi;
 using GrovePi.Sensors;
 using Windows.System.Threading;
 
-namespace HellowWindowsIoT
+namespace HelloWindowsIoT
 {
     public sealed class StartupTask : IBackgroundTask
     {
